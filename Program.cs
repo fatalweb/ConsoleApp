@@ -11,35 +11,35 @@ namespace ConsoleApp
 
             bool isPlaying = true;
 
-            int playerDX = 0;
-            int playerDY = 0;
+            int playerDirectionX = 0;
+            int playerDirectionY = 0;
 
             int allDots = 0;
-            int collectDots = 0;
+            int collectedDots = 0;
 
-            char[,] map = ReadMap("Map", out int playerX, out int playerY, ref allDots, ref collectDots);
+            char[,] map = ReadMap("Map", out int playerAxisX, out int playerAxisY, ref allDots, ref collectedDots);
 
             DrawMap(map);
 
             while (isPlaying)
             {
                 Console.SetCursorPosition(0, 15);
-                Console.WriteLine($"Собрано {collectDots}/{allDots}");
+                Console.WriteLine($"Собрано {collectedDots}/{allDots}");
 
                 if (Console.KeyAvailable)
                 {
                     ConsoleKeyInfo key = Console.ReadKey(true);
 
-                    ChangeDirection(key, ref playerDX, ref playerDY);
+                    ChangeDirection(key, ref playerDirectionX, ref playerDirectionY);
                 }
 
-                if (map[playerX + playerDX, playerY + playerDY] != ('|'))
+                if (map[playerAxisX + playerDirectionX, playerAxisY + playerDirectionY] != ('|'))
                 {
-                    Move(ref playerX, ref playerY, playerDX, playerDY);
-                    CollectDots(map, playerX, playerY, ref collectDots);
+                    Move(ref playerAxisX, ref playerAxisY, playerDirectionX, playerDirectionY);
+                    CollectDots(map, playerAxisX, playerAxisY, ref collectedDots);
                 }
 
-                if (collectDots == allDots)
+                if (collectedDots == allDots)
                 {
                     isPlaying = false;
                 }
@@ -47,53 +47,63 @@ namespace ConsoleApp
                 System.Threading.Thread.Sleep(150);
             }
 
-            if (collectDots == allDots)
+            if (collectedDots == allDots)
             {
                 Console.SetCursorPosition(0, 16);
                 Console.WriteLine("Игра окончена. Вы победили!");
             }
         }
 
-        static void ChangeDirection(ConsoleKeyInfo key, ref int dx, ref int dy)
+        static void ChangeDirection(ConsoleKeyInfo key, ref int playerDirectionX, ref int playerDirectionY)
         {
             switch (key.Key)
             {
                 case ConsoleKey.UpArrow:
-                    dx = -1; dy = 0;
+                    playerDirectionX = -1; playerDirectionY = 0;
                     break;
 
                 case ConsoleKey.DownArrow:
-                    dx = 1; dy = 0;
+                    playerDirectionX = 1; playerDirectionY = 0;
                     break;
 
                 case ConsoleKey.LeftArrow:
-                    dx = 0; dy = -1;
+                    playerDirectionX = 0; playerDirectionY = -1;
                     break;
 
                 case ConsoleKey.RightArrow:
-                    dx = 0; dy = 1;
+                    playerDirectionX = 0; playerDirectionY = 1;
                     break;
             }
         }
 
-        static void Move(ref int x, ref int y, int dx, int dy)
+        static void Move(ref int playerAxisX, ref int playerAxisY, int playerDirectionX, int playerDirectionY)
         {
-            Console.SetCursorPosition(y, x);
-            Console.Write(" ");
+            char space = ' ';
+            char player = '@';
 
-            x += dx;
-            y += dy;
+            DisplaySumbolByCoordinates(ref playerAxisX, ref playerAxisY, space);
 
-            Console.SetCursorPosition(y, x);
-            Console.Write('@');
+            playerAxisX += playerDirectionX;
+            playerAxisY += playerDirectionY;
+
+            DisplaySumbolByCoordinates(ref playerAxisX, ref playerAxisY, player);
         }
 
-        static void CollectDots(char[,] map, int playerX, int playerY, ref int collectDots)
+        static void DisplaySumbolByCoordinates(ref int playerAxisX, ref int playerAxisY, char symbol)
         {
-            if (map[playerX, playerY] == '.')
+            Console.SetCursorPosition(playerAxisY, playerAxisX);
+            Console.Write(symbol);
+        }
+
+        static void CollectDots(char[,] map, int playerAxisX, int playerAxisY, ref int collectedDots)
+        {
+            char space = ' ';
+            char dot = '.';
+
+            if (map[playerAxisX, playerAxisY] == dot)
             {
-                collectDots++;
-                map[playerX, playerY] = ' ';
+                collectedDots++;
+                map[playerAxisX, playerAxisY] = space;
             }
         }
 
@@ -110,10 +120,14 @@ namespace ConsoleApp
             }
         }
 
-        static char[,] ReadMap(string mapName, out int playerX, out int playerY, ref int allDots, ref int collectDots)
+        static char[,] ReadMap(string mapName, out int playerAxisX, out int playerAxisY, ref int allDots, ref int collectedDots)
         {
-            playerX = 0;
-            playerY = 0;
+            playerAxisX = 0;
+            playerAxisY = 0;
+            
+            char player = '@';
+            char space = ' ';
+            char dot = '.';
 
             string[] newFile = File.ReadAllLines($"Maps/{mapName}.txt");
             char[,] map = new char[newFile.Length, newFile[0].Length];
@@ -124,15 +138,14 @@ namespace ConsoleApp
                 {
                     map[i, j] = newFile[i][j];
 
-                    if (map[i, j] == '@')
+                    if (map[i, j] == player)
                     {
-                        playerX = i;
-                        playerY = j;
+                        playerAxisX = i;
+                        playerAxisY = j;
                     }
-
-                    else if (map[i, j] == ' ')
+                    else if (map[i, j] == space)
                     {
-                        map[i, j] = '.';
+                        map[i, j] = dot;
                         allDots++;
                     }
                 }
